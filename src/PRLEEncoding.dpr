@@ -28,15 +28,58 @@ begin
     end;
     delete(InMsg, 1, MatchCount);
   end;
-  result := OutMsg;
+  RLE := OutMsg;
+end;
+
+procedure Sort(var Table: array of string; N: word);
+var
+  i, j: word;
+  tmp: string;
+begin
+  for i := i to N - 1 do
+    for j := i to N do
+      if Table[i] > Table[j] then
+      begin
+        tmp := Table[i];
+        Table[i] := Table[j];
+        Table[j] := tmp;
+      end;
+end;
+
+function BWT(InMsg: string): string;
+var
+  OutMsg: string;
+  ShiftTable: array of string;
+  LastChar: char;
+  N, i: word;
+begin
+  InMsg := InMsg + '|';
+  N := length(InMsg);
+  SetLength(ShiftTable, N + 1);
+  ShiftTable[1] := InMsg;
+  for i := 2 to N do
+  begin
+    LastChar := InMsg[N];
+    InMsg := LastChar + copy(InMsg, 1, N - 1);
+    ShiftTable[i] := InMsg;
+  end;
+  Sort(ShiftTable, N);
+  for i := 1 to N do
+    OutMsg := OutMsg + ShiftTable[i][N];
+  BWT := OutMsg;
 end;
 
 var
   InpStr: string;
+
 begin
   try
     writeln('Введите сообщение:');
     readln(InpStr);
+    writeln(RLE(InpStr));
+    InpStr := BWT(InpStr);
+    writeln('После BWT:');
+    writeln(InpStr);
     writeln(RLE(InpStr));
     readln(InpStr);
   except
