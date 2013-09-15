@@ -6,6 +6,9 @@ program PRLEEncoding;
 uses
   System.SysUtils;
 
+const
+  EOMsg = '|';
+
 function RLE(InMsg: string): string;
 var
   MatchFl: boolean;
@@ -36,7 +39,7 @@ var
   i, j: word;
   tmp: string;
 begin
-  for i := i to N - 1 do
+  for i := 1 to N - 1 do
     for j := i to N do
       if Table[i] > Table[j] then
       begin
@@ -46,14 +49,14 @@ begin
       end;
 end;
 
-function BWT(InMsg: string): string;
+function BWTEncode(InMsg: string): string;
 var
   OutMsg: string;
   ShiftTable: array of string;
   LastChar: char;
   N, i: word;
 begin
-  InMsg := InMsg + '|';
+  InMsg := InMsg + EOMsg;
   N := length(InMsg);
   SetLength(ShiftTable, N + 1);
   ShiftTable[1] := InMsg;
@@ -66,7 +69,30 @@ begin
   Sort(ShiftTable, N);
   for i := 1 to N do
     OutMsg := OutMsg + ShiftTable[i][N];
-  BWT := OutMsg;
+  BWTEncode := OutMsg;
+end;
+
+function BWTDecode(InMsg: string): string;
+var
+  OutMsg: string;
+  ShiftTable: array of string;
+  N, i, j: word;
+begin
+  N := length(InMsg);
+  SetLength(ShiftTable, N + 1);
+  for i := 0 to N do
+    ShiftTable[i] := '';
+  for i := 1 to N do
+  begin
+    for j := 1 to N do
+      ShiftTable[j] := InMsg[j] + ShiftTable[j];
+    Sort(ShiftTable, N);
+  end;
+  for i := 1 to N do
+    if ShiftTable[i][N] = EOMsg then
+      OutMsg := ShiftTable[i];
+  delete(OutMsg, N, 1);
+  BWTDecode := OutMsg;
 end;
 
 var
@@ -76,11 +102,12 @@ begin
   try
     writeln('Введите сообщение:');
     readln(InpStr);
-    writeln(RLE(InpStr));
-    InpStr := BWT(InpStr);
-    writeln('После BWT:');
+
+    InpStr:=BWTEncode(InpStr);
     writeln(InpStr);
+
     writeln(RLE(InpStr));
+
     readln(InpStr);
   except
     on E: Exception do
