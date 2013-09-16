@@ -84,11 +84,12 @@ end;
 
 // Процедура сортировки строк для BWT
 // TODO Использовать более эффективный алгоритм сортировки
-procedure Sort(var Table: array of ShortString; N: word);
+procedure Sort(var Table: array of ShortString);
 var
-  i, j: word;
+  N, i, j: word;
   tmp: ShortString;
 begin
+  N:=Length(Table)-1;
   for i := 1 to N - 1 do
     for j := i to N do
       if Table[i] > Table[j] then
@@ -117,7 +118,7 @@ begin
     InMsg := LastChar + copy(InMsg, 1, N - 1);
     ShiftTable[i] := InMsg;
   end;
-  Sort(ShiftTable, N);
+  Sort(ShiftTable);
   OutMsg := '';
   for i := 1 to N do
     OutMsg := OutMsg + ShiftTable[i][N];
@@ -140,7 +141,7 @@ begin
   begin
     for j := 1 to N do
       ShiftTable[j] := InMsg[j] + ShiftTable[j];
-    Sort(ShiftTable, N);
+    Sort(ShiftTable);
   end;
   for i := 1 to N do
     if ShiftTable[i][N] = EOMsg then
