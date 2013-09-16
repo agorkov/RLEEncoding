@@ -4,114 +4,35 @@ program PRLEEncoding;
 {$R *.res}
 
 uses
-  System.SysUtils;
-
-const
-  EOMsg = '|';
-
-function RLE(InMsg: string): string;
-var
-  MatchFl: boolean;
-  MatchCount: shortint;
-  OutMsg: string;
-begin
-  while length(InMsg) >= 1 do
-  begin
-    MatchFl := (length(InMsg) > 1) and (InMsg[1] = InMsg[2]);
-    MatchCount := 1;
-    while (MatchCount <= 126) and (MatchCount < length(InMsg)) and ((InMsg[MatchCount] = InMsg[MatchCount + 1]) = MatchFl) do
-      MatchCount := MatchCount + 1;
-    if MatchFl then
-      OutMsg := OutMsg + inttostr(MatchCount) + InMsg[1]
-    else
-    begin
-      if MatchCount <> length(InMsg) then
-        MatchCount := MatchCount - 1;
-      OutMsg := OutMsg + inttostr(-MatchCount) + copy(InMsg, 1, MatchCount);
-    end;
-    delete(InMsg, 1, MatchCount);
-  end;
-  RLE := OutMsg;
-end;
-
-procedure Sort(var Table: array of string; N: word);
-var
-  i, j: word;
-  tmp: string;
-begin
-  for i := 1 to N - 1 do
-    for j := i to N do
-      if Table[i] > Table[j] then
-      begin
-        tmp := Table[i];
-        Table[i] := Table[j];
-        Table[j] := tmp;
-      end;
-end;
-
-function BWTEncode(InMsg: string): string;
-var
-  OutMsg: string;
-  ShiftTable: array of string;
-  LastChar: char;
-  N, i: word;
-begin
-  InMsg := InMsg + EOMsg;
-  N := length(InMsg);
-  SetLength(ShiftTable, N + 1);
-  ShiftTable[1] := InMsg;
-  for i := 2 to N do
-  begin
-    LastChar := InMsg[N];
-    InMsg := LastChar + copy(InMsg, 1, N - 1);
-    ShiftTable[i] := InMsg;
-  end;
-  Sort(ShiftTable, N);
-  for i := 1 to N do
-    OutMsg := OutMsg + ShiftTable[i][N];
-  BWTEncode := OutMsg;
-end;
-
-function BWTDecode(InMsg: string): string;
-var
-  OutMsg: string;
-  ShiftTable: array of string;
-  N, i, j: word;
-begin
-  N := length(InMsg);
-  SetLength(ShiftTable, N + 1);
-  for i := 0 to N do
-    ShiftTable[i] := '';
-  for i := 1 to N do
-  begin
-    for j := 1 to N do
-      ShiftTable[j] := InMsg[j] + ShiftTable[j];
-    Sort(ShiftTable, N);
-  end;
-  for i := 1 to N do
-    if ShiftTable[i][N] = EOMsg then
-      OutMsg := ShiftTable[i];
-  delete(OutMsg, N, 1);
-  BWTDecode := OutMsg;
-end;
+  System.SysUtils,
+  URLE in 'URLE.pas';
 
 var
-  InpStr: string;
+  InMsg: ShortString;
+  OutMsg: TRLEEncodedString;
 
 begin
   try
     writeln('Введите сообщение:');
-    readln(InpStr);
+    readln(InMsg);
+    writeln('Длина исходного сообщения: ', length(InMsg), 'байт');
+    writeln;
 
-    InpStr:=BWTEncode(InpStr);
-    writeln(InpStr);
+    OutMsg := RLEEncode(InMsg);
+    writeln('Длина закодированного сообщения: ', length(OutMsg), 'байт');
+    InMsg := RLEDecode(OutMsg);
+    writeln(InMsg);
+    writeln;
 
-    writeln(RLE(InpStr));
+    OutMsg := RLEEncode(BWTEncode(InMsg));
+    writeln('Длина закодированного сообщения с использованием BWT: ', length(OutMsg), 'байт');
+    InMsg := BWTDecode(RLEDecode(OutMsg));
+    writeln(InMsg);
+    writeln;
 
-    readln(InpStr);
+    readln;
   except
     on E: Exception do
       writeln(E.ClassName, ': ', E.Message);
   end;
-
 end.
